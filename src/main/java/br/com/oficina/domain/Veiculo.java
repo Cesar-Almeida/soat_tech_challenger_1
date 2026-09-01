@@ -1,0 +1,4 @@
+package br.com.oficina.domain;
+import jakarta.persistence.*; import java.util.UUID;
+@Entity public class Veiculo { @Id @GeneratedValue private UUID id; @ManyToOne(optional=false) private Cliente cliente; @Column(nullable=false,unique=true,length=7) private String placa; @Column(nullable=false) private String marca; @Column(nullable=false) private String modelo; private int ano;
+ protected Veiculo(){} public Veiculo(Cliente c,String placa,String marca,String modelo,int ano){cliente=c;this.placa=placa;this.marca=marca;this.modelo=modelo;this.ano=ano;} public UUID getId(){return id;} public Cliente getCliente(){return cliente;} public String getPlaca(){return placa;} public String getMarca(){return marca;} public String getModelo(){return modelo;} public int getAno(){return ano;} public void atualizar(String marca,String modelo,int ano){this.marca=marca;this.modelo=modelo;this.ano=ano;} }

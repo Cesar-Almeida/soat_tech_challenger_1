@@ -1,0 +1,4 @@
+package br.com.oficina.domain;
+import jakarta.persistence.*; import java.math.BigDecimal; import java.util.UUID;
+@Entity public class Peca { @Id @GeneratedValue private UUID id; @Column(nullable=false) private String descricao; @Column(nullable=false,precision=12,scale=2) private BigDecimal precoUnitario; private int estoque;
+ protected Peca(){} public Peca(String d,BigDecimal p,int e){descricao=d;precoUnitario=p;estoque=e;} public UUID getId(){return id;} public String getDescricao(){return descricao;} public BigDecimal getPrecoUnitario(){return precoUnitario;} public int getEstoque(){return estoque;} public void atualizar(String d,BigDecimal p,int e){descricao=d;precoUnitario=p;estoque=e;} public void baixar(int quantidade){if(quantidade<=0||estoque<quantidade)throw new IllegalStateException("Estoque insuficiente");estoque-=quantidade;} }

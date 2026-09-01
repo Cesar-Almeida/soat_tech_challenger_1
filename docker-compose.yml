@@ -1,0 +1,19 @@
+services:
+  oficina-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oficina-api-soap-challenger-1
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/data/oficina;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-troque-esta-chave-em-producao-com-ao-menos-256-bits-123456789}
+      APP_JWT_EXPIRATION_MINUTES: 120
+    volumes:
+      - h2-data:/data
+    restart: unless-stopped
+
+volumes:
+  h2-data:

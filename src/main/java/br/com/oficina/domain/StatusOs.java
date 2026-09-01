@@ -1,0 +1,2 @@
+package br.com.oficina.domain;
+public enum StatusOs { RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA, ENTREGUE }

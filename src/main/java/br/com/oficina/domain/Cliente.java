@@ -1,0 +1,4 @@
+package br.com.oficina.domain;
+import jakarta.persistence.*; import java.util.UUID;
+@Entity public class Cliente { @Id @GeneratedValue private UUID id; @Column(nullable=false,unique=true,length=14) private String documento; @Column(nullable=false) private String nome; private String telefone; private String email;
+ protected Cliente(){} public Cliente(String documento,String nome,String telefone,String email){this.documento=documento;this.nome=nome;this.telefone=telefone;this.email=email;} public UUID getId(){return id;} public String getDocumento(){return documento;} public String getNome(){return nome;} public String getTelefone(){return telefone;} public String getEmail(){return email;} public void atualizar(String nome,String telefone,String email){this.nome=nome;this.telefone=telefone;this.email=email;} }

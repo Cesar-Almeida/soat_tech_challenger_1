@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: oficina-api-soap-challenger-1
+  datasource: { url: jdbc:h2:mem:oficina;MODE=PostgreSQL;DB_CLOSE_DELAY=-1, username: sa, password: '' }
+  jpa: { hibernate: { ddl-auto: update }, open-in-view: false }
+  h2.console.enabled: true
+app.jwt.secret: "troque-esta-chave-em-producao-com-ao-menos-256-bits-123456789"
+app.jwt.expiration-minutes: 120
