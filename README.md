@@ -412,3 +412,73 @@ Retorna o tempo médio, em minutos, das OS que tenham sido iniciadas e finalizad
 ## 9. Collection do Insomnia
 
 Importe o arquivo `oficina-api-insomnia-collection.json` que acompanha o projeto. Após o login, preencha no ambiente da collection: `token`, `cliente_id`, `veiculo_id`, `servico_id`, `peca_id` e `os_id`.
+
+## Fase 2 — arquitetura, resiliência e escala
+
+Esta evolução preserva o domínio da oficina e separa os limites de entrada HTTP, regras de negócio e persistência JPA. Os fluxos críticos foram cobertos por testes unitários e de integração. A OS passa a oferecer uma resposta de criação reduzida, consulta de status e callbacks de integração.
+
+```mermaid
+flowchart LR
+    C[Cliente / Insomnia] --> API[Spring Boot API]
+    API --> D[Domínio: OS, Cliente, Veículo, Peça]
+    API --> JPA[Adaptador JPA]
+    JPA --> PG[(PostgreSQL)]
+    E[Serviço de e-mail] -->|callback autenticado| API
+    GH[GitHub Actions] --> K8S[Kubernetes]
+    K8S --> API
+    K8S --> PG
+```
+
+### APIs evoluídas
+
+| Método | Rota | Finalidade |
+|---|---|---|
+| POST | `/api/ordens-servico` | Abre a OS e retorna `id`, status, total e criação |
+| GET | `/api/ordens-servico/{id}/status` | Consulta objetiva do status atual |
+| GET | `/api/ordens-servico` | Exibe apenas OS ativas, em prioridade de execução e das mais antigas para as recentes |
+| POST | `/api/ordens-servico/{id}/orcamento/notificacao` | Recebe aprovação/recusa externa do orçamento |
+| POST | `/api/integracoes/email/status` | Atualiza status a partir de integração de e-mail |
+
+Os dois endpoints de integração exigem o cabeçalho `X-Integration-Token`. No ambiente local o valor padrão é `local-integration-token`; em ambientes reais defina `APP_INTEGRATION_TOKEN` por Secret. A recusa é registrada como `ORCAMENTO_RECUSADO` e deixa de aparecer na fila operacional.
+
+### Docker local
+
+O Compose sobe a API e PostgreSQL 16, com volume persistente e healthcheck:
+
+```powershell
+docker compose up --build -d
+docker compose logs -f oficina-api
+```
+
+Defina antes `APP_JWT_SECRET`, `APP_INTEGRATION_TOKEN` e `POSTGRES_PASSWORD` para não usar os valores de desenvolvimento. Para encerrar: `docker compose down`.
+
+### Kubernetes
+
+Os manifestos em [`k8s`](k8s) criam namespace, ConfigMap, PostgreSQL com PVC, Deployment, Service, probes de saúde e HPA (2 a 8 réplicas, CPU 70% e memória 75%). O cluster precisa ter o Metrics Server para o HPA funcionar.
+
+```powershell
+kubectl apply -f k8s/namespace.yaml
+kubectl -n oficina create secret generic oficina-api-secret --from-literal=SPRING_DATASOURCE_PASSWORD='<senha>' --from-literal=APP_JWT_SECRET='<jwt-seguro>' --from-literal=APP_INTEGRATION_TOKEN='<token-seguro>'
+kubectl apply -k k8s
+kubectl get hpa -n oficina
+```
+
+### Terraform
+
+Em [`infra`](infra) há Terraform para criar um cluster local Kind com control-plane e worker. É necessário ter Docker, Kind e Terraform instalados:
+
+```powershell
+Set-Location infra
+terraform init
+terraform apply
+```
+
+O banco é implantado pelo manifesto Kubernetes `k8s/postgres.yaml`; portanto, é versionado junto da infraestrutura da aplicação.
+
+### CI/CD
+
+O workflow [ci-cd.yml](.github/workflows/ci-cd.yml) executa build, testes, imagem Docker, publicação no GHCR e, na branch `main`, aplica banco e manifestos no cluster. Configure no repositório os Secrets `KUBE_CONFIG_DATA` (kubeconfig em Base64), `POSTGRES_PASSWORD`, `APP_JWT_SECRET` e `APP_INTEGRATION_TOKEN`.
+
+### Collection e vídeo
+
+A collection está em [`outputs/oficina-api-insomnia-collection.json`](outputs/oficina-api-insomnia-collection.json). Vídeo demonstrativo: **pendente de publicação pelo grupo** — inclua aqui a URL pública ou não listada do YouTube/Vimeo antes da entrega.

@@ -1,0 +1,16 @@
+# Build Maven
+target/
+
+# Arquivos de trabalho temporários
+work/
+*.log
+
+# Configurações locais de IDE e Codex
+.idea/
+.vscode/
+.agents/
+.codex/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

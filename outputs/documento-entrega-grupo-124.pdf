@@ -1,0 +1,315 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1163 >>
+stream
+BT
+/F2 18 Tf
+50 790 Td
+(Documento de Entrega - Grupo 124) Tj
+ET
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+/F2 11 Tf
+(Documento de entrega) Tj
+/F1 10 Tf
+T*
+(Projeto: Oficina API SOAP Challenger 1) Tj
+T*
+T*
+/F2 11 Tf
+(Identificacao do grupo) Tj
+/F1 10 Tf
+T*
+(Grupo: 124) Tj
+T*
+(Participante: CESAR DE MOURA ALMEIDA) Tj
+T*
+(E-mail: cesaralmeida268@gmail.com) Tj
+T*
+(Username no Discord: C.M.A BR) Tj
+T*
+T*
+/F2 11 Tf
+(Links de entrega) Tj
+/F1 10 Tf
+T*
+(Documentacao e artefatos:) Tj
+T*
+(https://github.com/Cesar-Almeida/soat_tech_challenger_1/tree/main/outputs) Tj
+T*
+(Repositorio: https://github.com/Cesar-Almeida/soat_tech_challenger_1) Tj
+T*
+T*
+/F2 11 Tf
+(Conteudo) Tj
+/F1 10 Tf
+T*
+(1. Informacoes do grupo e links) Tj
+T*
+(2. Escopo da analise de seguranca) Tj
+T*
+(3. Vulnerabilidades encontradas) Tj
+T*
+(4. Plano de correcao recomendado) Tj
+T*
+T*
+(Data da analise: 31/08/2026. Este relatorio apresenta uma analise estatica manual do) Tj
+T*
+(codigo-fonte e das configuracoes do MVP. Ele nao substitui testes de invasao, revisao de) Tj
+T*
+(infraestrutura ou auditoria de producao.) Tj
+T*
+ET
+BT
+/F1 8 Tf
+50 28 Td
+(Grupo 124 - Oficina API SOAP Challenger 1 - Pagina 1 de 4) Tj
+ET
+
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1394 >>
+stream
+BT
+/F2 18 Tf
+50 790 Td
+(Relatorio de Seguranca) Tj
+ET
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+/F2 11 Tf
+(Escopo da analise) Tj
+/F1 10 Tf
+T*
+(Foram revisados os arquivos de configuracao da aplicacao, a configuracao de seguranca JWT,) Tj
+T*
+(os controladores HTTP, a configuracao H2 e os arquivos Docker. O foco foi identificar riscos) Tj
+T*
+(de autenticacao, autorizacao, segredos, exposicao de dados e operacao em ambiente de) Tj
+T*
+(producao.) Tj
+T*
+T*
+/F2 11 Tf
+(Controles positivos identificados) Tj
+/F1 10 Tf
+T*
+(- Autenticacao JWT nas rotas administrativas.) Tj
+T*
+(- Senha de login processada com BCrypt.) Tj
+T*
+(- Expiracao de token configurada em 120 minutos.) Tj
+T*
+(- Validacao de CPF/CNPJ, placa e dados de entrada.) Tj
+T*
+(- Consulta publica da OS condicionada ao documento do proprietario.) Tj
+T*
+(- Regra de estoque impede saldo negativo.) Tj
+T*
+T*
+/F2 11 Tf
+(Resumo de riscos) Tj
+/F1 10 Tf
+T*
+(Critico: segredo JWT padrao exposto em codigo/configuracao.) Tj
+T*
+(Alto: credenciais administrativas fixas no codigo-fonte.) Tj
+T*
+(Alto: console H2 habilitado com usuario padrao e senha vazia.) Tj
+T*
+(Medio: ausencia de limitacao de tentativas no login.) Tj
+T*
+(Medio: ausencia de TLS e de cabecalhos de seguranca na aplicacao.) Tj
+T*
+(Medio: qualquer JWT valido recebe privilegio administrativo.) Tj
+T*
+ET
+BT
+/F1 8 Tf
+50 28 Td
+(Grupo 124 - Oficina API SOAP Challenger 1 - Pagina 2 de 4) Tj
+ET
+
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1639 >>
+stream
+BT
+/F2 18 Tf
+50 790 Td
+(Relatorio de Seguranca) Tj
+ET
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+/F2 11 Tf
+(Vulnerabilidades encontradas - parte 1) Tj
+/F1 10 Tf
+T*
+T*
+/F2 11 Tf
+(V1 - Segredo JWT padrao exposto \(Critico\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: app.jwt.secret esta definido em application.yml e tambem possui valor padrao no) Tj
+T*
+(docker-compose.yml. Impacto: quem obtem o repositorio ou imagem pode assinar tokens falsos e) Tj
+T*
+(assumir acesso administrativo. Correcao: remover o valor padrao, usar cofre de segredos ou) Tj
+T*
+(variavel de ambiente obrigatoria, rotacionar o segredo e invalidar tokens anteriores.) Tj
+T*
+T*
+/F2 11 Tf
+(V2 - Credencial administrativa fixa \(Alto\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: o usuario admin e a senha admin123 estao definidos no SecurityConfiguration.) Tj
+T*
+(Impacto: a credencial e previsivel e pode ser explorada por qualquer pessoa com acesso ao) Tj
+T*
+(codigo ou conhecimento do padrao. Correcao: persistir usuarios, armazenar hashes de senha no) Tj
+T*
+(banco, criar o primeiro administrador por mecanismo seguro e remover credenciais de) Tj
+T*
+(demonstracao.) Tj
+T*
+T*
+/F2 11 Tf
+(V3 - Console H2 habilitado e sem senha \(Alto\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: h2.console.enabled esta ativo e o datasource usa usuario sa sem senha. Impacto:) Tj
+T*
+(se o console ou a porta da aplicacao forem expostos, ha risco de leitura, alteracao ou) Tj
+T*
+(exclusao de dados. Correcao: desabilitar o console fora do perfil local, usar banco) Tj
+T*
+(gerenciado em producao, credenciais fortes e regras de rede restritivas.) Tj
+T*
+ET
+BT
+/F1 8 Tf
+50 28 Td
+(Grupo 124 - Oficina API SOAP Challenger 1 - Pagina 3 de 4) Tj
+ET
+
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1854 >>
+stream
+BT
+/F2 18 Tf
+50 790 Td
+(Relatorio de Seguranca) Tj
+ET
+BT
+/F1 10 Tf
+50 760 Td
+14 TL
+/F2 11 Tf
+(Vulnerabilidades encontradas - parte 2) Tj
+/F1 10 Tf
+T*
+T*
+/F2 11 Tf
+(V4 - Sem protecao contra for√ßa bruta \(Medio\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: o endpoint de login nao possui rate limit, bloqueio temporario ou registro de) Tj
+T*
+(falhas. Impacto: tentativas automatizadas podem descobrir senhas fracas. Correcao: aplicar) Tj
+T*
+(limitacao por IP e usuario, bloqueio progressivo, CAPTCHA quando aplicavel e monitoramento) Tj
+T*
+(de eventos de autenticacao.) Tj
+T*
+T*
+/F2 11 Tf
+(V5 - Transporte e cabecalhos nao configurados \(Medio\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: nao ha configuracao de HTTPS, HSTS, Content-Security-Policy ou outros cabecalhos) Tj
+T*
+(no projeto. Impacto: quando publicado sem proxy seguro, trafego e token podem ser) Tj
+T*
+(interceptados. Correcao: terminar TLS em proxy reverso, redirecionar HTTP para HTTPS e) Tj
+T*
+(configurar cabecalhos de seguranca adequados.) Tj
+T*
+T*
+/F2 11 Tf
+(V6 - Autorizacao sem perfis granulares \(Medio\)) Tj
+/F1 10 Tf
+T*
+(Evidencia: o filtro JWT concede ROLE_ADMIN a todo token valido. Impacto: nao existe) Tj
+T*
+(separacao entre atendente, mecanico e administrador; um usuario autenticado recebe) Tj
+T*
+(privilegio excessivo. Correcao: incluir roles como claims assinadas, validar usuario ativo e) Tj
+T*
+(permissao no servidor e aplicar autorizacao por rota e operacao.) Tj
+T*
+T*
+/F2 11 Tf
+(Plano de acao priorizado) Tj
+/F1 10 Tf
+T*
+(1. Antes de publicar: corrigir V1, V2 e V3.) Tj
+T*
+(2. Na proxima iteracao: implementar V4 e V6.) Tj
+T*
+(3. No processo de deploy: implementar V5 e migrar de H2 para banco de producao.) Tj
+T*
+(4. Depois das correcoes: executar teste de invasao, SAST e analise de dependencias.) Tj
+T*
+ET
+BT
+/F1 8 Tf
+50 28 Td
+(Grupo 124 - Oficina API SOAP Challenger 1 - Pagina 4 de 4) Tj
+ET
+
+endstream
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000015 00000 n 0000000064 00000 n 0000000140 00000 n 0000000237 00000 n 0000000339 00000 n 0000000475 00000 n 0000001690 00000 n 0000001826 00000 n 0000003272 00000 n 0000003409 00000 n 0000005101 00000 n 0000005239 00000 n trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+7146
+%%EOF

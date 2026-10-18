@@ -1,19 +1,36 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: oficina
+      POSTGRES_USER: oficina
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oficina_dev}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oficina -d oficina"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   oficina-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: oficina-api-soap-challenger-1
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:h2:file:/data/oficina;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/oficina
+      SPRING_DATASOURCE_USERNAME: oficina
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-oficina_dev}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       APP_JWT_SECRET: ${APP_JWT_SECRET:-troque-esta-chave-em-producao-com-ao-menos-256-bits-123456789}
       APP_JWT_EXPIRATION_MINUTES: 120
-    volumes:
-      - h2-data:/data
+      APP_INTEGRATION_TOKEN: ${APP_INTEGRATION_TOKEN:-local-integration-token}
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  h2-data:
+  postgres-data:
