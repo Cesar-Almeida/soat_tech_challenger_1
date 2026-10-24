@@ -1,63 +1,96 @@
-name: CI/CD
+name: CI/CD - Oficina API
 
 on:
-  pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
 
+env:
+  IMAGE_NAME: ghcr.io/cesar-almeida/soat_tech_challenger_1
+
 jobs:
   build-test-image:
+    name: Build, testes e imagem
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - run: mvn -B verify
-      - uses: docker/login-action@v3
-        if: github.event_name == 'push'
+
+      - name: Build e testes automatizados
+        run: mvn -B verify
+
+      - name: Autenticar no GitHub Container Registry
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+
+      - name: Gerar e publicar imagem Docker
+        uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name == 'push' }}
+          push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           tags: |
-            ghcr.io/cesar-almeida/soat_tech_challenger_1:${{ github.sha }}
-            ghcr.io/cesar-almeida/soat_tech_challenger_1:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
 
   deploy:
+    name: Deploy no Kubernetes local
     needs: build-test-image
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64]
     env:
-      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      KUBECONFIG: C:\Users\Windows\.kube\oficina-config
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Informar deploy não configurado
-        if: env.KUBE_CONFIG_DATA == ''
-        run: echo "KUBE_CONFIG_DATA não configurado; deploy automático ignorado."
-      - name: Instalar kubectl
-        if: env.KUBE_CONFIG_DATA != ''
-        uses: azure/setup-kubectl@v4
-      - name: Configurar kubectl
-        if: env.KUBE_CONFIG_DATA != ''
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Validar acesso ao cluster
+        shell: pwsh
         run: |
-          mkdir -p "$HOME/.kube"
-          echo "$KUBE_CONFIG_DATA" | base64 --decode > "$HOME/.kube/config"
+          if (-not (Test-Path $env:KUBECONFIG)) {
+            throw "Kubeconfig não encontrado em $env:KUBECONFIG"
+          }
+          kubectl cluster-info
+
       - name: Aplicar banco, configuração e aplicação
-        if: env.KUBE_CONFIG_DATA != ''
+        shell: pwsh
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+          APP_INTEGRATION_TOKEN: ${{ secrets.APP_INTEGRATION_TOKEN }}
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl -n oficina create secret generic oficina-api-secret --from-literal=SPRING_DATASOURCE_PASSWORD='${{ secrets.POSTGRES_PASSWORD }}' --from-literal=APP_JWT_SECRET='${{ secrets.APP_JWT_SECRET }}' --from-literal=APP_INTEGRATION_TOKEN='${{ secrets.APP_INTEGRATION_TOKEN }}' --dry-run=client -o yaml | kubectl apply -f -
-          kubectl apply -f k8s/configmap.yaml -f k8s/postgres.yaml
-          sed "s|:latest|:${{ github.sha }}|" k8s/app.yaml | kubectl apply -f -
-          kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s\namespace.yaml
+
+          kubectl -n oficina create secret generic oficina-api-secret `
+            --from-literal=SPRING_DATASOURCE_PASSWORD="$env:POSTGRES_PASSWORD" `
+            --from-literal=APP_JWT_SECRET="$env:APP_JWT_SECRET" `
+            --from-literal=APP_INTEGRATION_TOKEN="$env:APP_INTEGRATION_TOKEN" `
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl apply -f k8s\configmap.yaml
+          kubectl apply -f k8s\postgres.yaml
+          kubectl apply -f k8s\app.yaml
+          kubectl apply -f k8s\hpa.yaml
+
+          kubectl -n oficina set image deployment/oficina-api `
+            oficina-api="${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+          kubectl -n oficina rollout status deployment/oficina-api --timeout=180s
