@@ -14,3 +14,9 @@ work/
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+# Terraform local/state
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
